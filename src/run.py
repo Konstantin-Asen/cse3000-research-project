@@ -12,7 +12,7 @@ from kyordanov.src.rbo_redefinition import (
 )
 
 
-def config_run(file_path, p, s_medium_threshold=15, s_large_threshold=45):
+def config_run(file_path, p, l_ceiling, s_medium, s_large):
     assert 0.0 < p < 1.0
     file = open(file_path, "r")
     first_ranking = []
@@ -127,7 +127,9 @@ def config_run(file_path, p, s_medium_threshold=15, s_large_threshold=45):
         if line == "\n":
             flag_append_first = True
             count_overall += 1
-            value_s, results = single_pair_results(first_ranking, second_ranking, p)
+            value_s, results = single_pair_results(
+                first_ranking, second_ranking, p, l_ceiling
+            )
 
             aggr_avg_overall_agreement_distance_original += results["avg_agreement_distance_original"]
             aggr_avg_overall_agreement_distance_previous_value += results["avg_agreement_distance_previous_value"]
@@ -138,7 +140,7 @@ def config_run(file_path, p, s_medium_threshold=15, s_large_threshold=45):
             aggr_avg_overall_ext_distance_logit += results["ext_distance_logit"]
             aggr_avg_overall_ext_distance_gam += results["ext_distance_gam"]
 
-            if value_s <= s_medium_threshold:
+            if value_s <= s_medium:
                 count_small_s += 1
 
                 aggr_avg_small_s_agreement_distance_original += results["avg_agreement_distance_original"]
@@ -192,7 +194,7 @@ def config_run(file_path, p, s_medium_threshold=15, s_large_threshold=45):
                     worst_performing_ext_small_s_gam = results["info"]
                     max_small_s_ext_distance_gam = results["ext_distance_gam"]
 
-            elif (s_medium_threshold + 1) <= value_s <= s_large_threshold:
+            elif (s_medium + 1) <= value_s <= s_large:
                 count_medium_s += 1
 
                 aggr_avg_medium_s_agreement_distance_original += results["avg_agreement_distance_original"]
@@ -322,7 +324,7 @@ def config_run(file_path, p, s_medium_threshold=15, s_large_threshold=45):
             f"avg_of_{count_overall}_ext_distance_logistic_regression": aggr_avg_overall_ext_distance_logit / count_overall,
             f"avg_of_{count_overall}_ext_distance_logistic_gam_regression": aggr_avg_overall_ext_distance_gam / count_overall,
         },
-        f"small_s_to_{s_medium_threshold}": {
+        f"small_s_to_{s_medium}": {
             f"avg_of_{count_small_s}_agreement_distance_original": aggr_avg_small_s_agreement_distance_original / count_small_s,
             f"avg_of_{count_small_s}_agreement_distance_previous_value": aggr_avg_small_s_agreement_distance_previous_value / count_small_s,
             f"avg_of_{count_small_s}_agreement_distance_logistic_regression": aggr_avg_small_s_agreement_distance_logit / count_small_s,
@@ -344,7 +346,7 @@ def config_run(file_path, p, s_medium_threshold=15, s_large_threshold=45):
             "best_performing_ext_logistic_regression": best_performing_ext_small_s_logit,
             "best_performing_ext_logistic_gam_regression": best_performing_ext_small_s_gam,
         },
-        f"medium_s_from_{s_medium_threshold + 1}_to_{s_large_threshold}": {
+        f"medium_s_from_{s_medium + 1}_to_{s_large}": {
             f"avg_of_{count_medium_s}_agreement_distance_original": aggr_avg_medium_s_agreement_distance_original / count_medium_s,
             f"avg_of_{count_medium_s}_agreement_distance_previous_value": aggr_avg_medium_s_agreement_distance_previous_value / count_medium_s,
             f"avg_of_{count_medium_s}_agreement_distance_logistic_regression": aggr_avg_medium_s_agreement_distance_logit / count_medium_s,
@@ -366,7 +368,7 @@ def config_run(file_path, p, s_medium_threshold=15, s_large_threshold=45):
             "best_performing_ext_logistic_regression": best_performing_ext_medium_s_logit,
             "best_performing_ext_logistic_gam_regression": best_performing_ext_medium_s_gam,
         },
-        f"large_s_beyond_{s_large_threshold + 1}": {
+        f"large_s_beyond_{s_large + 1}": {
             f"avg_of_{count_large_s}_agreement_distance_original": aggr_avg_large_s_agreement_distance_original / count_large_s,
             f"avg_of_{count_large_s}_agreement_distance_previous_value": aggr_avg_large_s_agreement_distance_previous_value / count_large_s,
             f"avg_of_{count_large_s}_agreement_distance_logistic_regression": aggr_avg_large_s_agreement_distance_logit / count_large_s,
@@ -386,17 +388,17 @@ def config_run(file_path, p, s_medium_threshold=15, s_large_threshold=45):
             "best_performing_agreement_logistic_gam_regression": best_performing_agreement_large_s_gam,
             "best_performing_ext_previous_value": best_performing_ext_large_s_previous_value,
             "best_performing_ext_logistic_regression": best_performing_ext_large_s_logit,
-            "best_performing_ext_logistic_gam_regression": best_performing_ext_large_s_gam
-        }
+            "best_performing_ext_logistic_gam_regression": best_performing_ext_large_s_gam,
+        },
     }
     return config_dict
 
 
-def single_pair_results(ranking1, ranking2, p, l_upper_threshold=100):
+def single_pair_results(ranking1, ranking2, p, l_ceiling):
     persistence_ranks = round(1 / (1 - p))
     infinity = min(len(ranking1), len(ranking2))
 
-    len_L = random.randint(persistence_ranks, l_upper_threshold)
+    len_L = random.randint(persistence_ranks, l_ceiling)
     len_S = random.randint(math.floor(0.75 * persistence_ranks), len_L)
     S = ranking1[:len_S]
     L = ranking2[:len_L]
@@ -618,58 +620,57 @@ def plot_agreements(config_dict, p_value_str, keys_s, keys_criteria, farthest_de
             )
             plt.close()
 
-            if not criterion.endswith("previous_value"):
-                fig_2, ax_2 = plt.subplots()
-                ax_2.set_title(
-                    f"Fitted and Real Agreements for Logit and GAM\n(s = {len_S}, p = {p_value})"
-                )
-                ax_2.set_xlabel("Depth")
-                ax_2.set_ylabel("Agreement")
+            fig_2, ax_2 = plt.subplots()
+            ax_2.set_title(
+                f"Fitted and Real Agreements for Logit and GAM\n(s = {len_S}, p = {p_value})"
+            )
+            ax_2.set_xlabel("Depth")
+            ax_2.set_ylabel("Agreement")
 
-                ax_2.plot(
-                    range(1, len_S + 1),
-                    agreements_to_s,
-                    color="c",
-                    marker="o",
-                    markersize=2,
-                    label=f"Observed Agreements from 1 to s",
-                )
-                ax_2.plot(
-                    range(1, len_S + 1),
-                    fitted_agreements_logit,
-                    color="b",
-                    marker="o",
-                    markersize=2,
-                    label=f"Agreements Fitted by Logistic-Regression EXT from 1 to s",
-                )
-                ax_2.plot(
-                    range(1, len_S + 1),
-                    fitted_agreements_gam,
-                    color="m",
-                    marker="o",
-                    markersize=2,
-                    label=f"Agreements Fitted by Logistic-GAM-Regression EXT from 1 to s",
-                )
+            ax_2.plot(
+                range(1, len_S + 1),
+                agreements_to_s,
+                color="c",
+                marker="o",
+                markersize=2,
+                label=f"Observed Agreements from 1 to s",
+            )
+            ax_2.plot(
+                range(1, len_S + 1),
+                fitted_agreements_logit,
+                color="b",
+                marker="o",
+                markersize=2,
+                label=f"Agreements Fitted by Logistic-Regression EXT from 1 to s",
+            )
+            ax_2.plot(
+                range(1, len_S + 1),
+                fitted_agreements_gam,
+                color="m",
+                marker="o",
+                markersize=2,
+                label=f"Agreements Fitted by Logistic-GAM-Regression EXT from 1 to s",
+            )
 
-                bbox_2 = ax_2.get_position()
-                ax_2.set_position(
-                    [
-                        bbox_2.x0,
-                        bbox_2.y0 + bbox_2.height * 0.19,
-                        bbox_2.width,
-                        bbox_2.height * 0.81,
-                    ]
-                )
-                ax_2.legend(
-                    loc="lower center",
-                    bbox_to_anchor=(0.5, 0),
-                    bbox_transform=fig_2.transFigure,
-                )
+            bbox_2 = ax_2.get_position()
+            ax_2.set_position(
+                [
+                    bbox_2.x0,
+                    bbox_2.y0 + bbox_2.height * 0.19,
+                    bbox_2.width,
+                    bbox_2.height * 0.81,
+                ]
+            )
+            ax_2.legend(
+                loc="lower center",
+                bbox_to_anchor=(0.5, 0),
+                bbox_transform=fig_2.transFigure,
+            )
 
-                plt.savefig(
-                    f"../figures/p{p_value_str}Value_s{s_type.split('_')[0].capitalize()}_{''.join(capitalized)}_FittedAgreements.png"
-                )
-                plt.close()
+            plt.savefig(
+                f"../figures/p{p_value_str}Value_s{s_type.split('_')[0].capitalize()}_{''.join(capitalized)}_FittedAgreements.png"
+            )
+            plt.close()
 
             fig_3, ax_3 = plt.subplots()
             ax_3.set_title(
@@ -740,10 +741,19 @@ if __name__ == "__main__":
     random.seed(42)
     p_values = [0.8, 0.9, 0.95]
     data_file = "../data/data_5000pairs_2000length.txt"
+    l_upper_threshold = 100
+    s_medium_threshold = 15
+    s_large_threshold = 45
     plotting_depth = 140
 
     for idx in range(len(p_values)):
-        output_dict = config_run(data_file, p_values[idx])
+        output_dict = config_run(
+            data_file,
+            p_values[idx],
+            l_upper_threshold,
+            s_medium_threshold,
+            s_large_threshold,
+        )
         value_str = (
             f"{idx + 1}th"
             if idx >= 3
