@@ -3,7 +3,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-from kyordanov.src.rbo_redefinition import (
+from src.rbo_redefinition import (
     real_rbo,
     rbo_ext_original,
     rbo_ext_previous_value,
@@ -19,6 +19,37 @@ def config_run(file_path, p, l_ceiling, s_medium, s_large):
     second_ranking = []
     flag_append_first = True
     count_overall, count_small_s, count_medium_s, count_large_s = 0, 0, 0, 0
+
+    small_s_diffs_dict = {
+        "medium_rbo_difference_original": 0,
+        "medium_rbo_difference_previous_value": 0,
+        "medium_rbo_difference_logit": 0,
+        "medium_rbo_difference_gam": 0,
+        "large_rbo_difference_original": 0,
+        "large_rbo_difference_previous_value": 0,
+        "large_rbo_difference_logit": 0,
+        "large_rbo_difference_gam": 0,
+    }
+    medium_s_diffs_dict = {
+        "medium_rbo_difference_original": 0,
+        "medium_rbo_difference_previous_value": 0,
+        "medium_rbo_difference_logit": 0,
+        "medium_rbo_difference_gam": 0,
+        "large_rbo_difference_original": 0,
+        "large_rbo_difference_previous_value": 0,
+        "large_rbo_difference_logit": 0,
+        "large_rbo_difference_gam": 0,
+    }
+    large_s_diffs_dict = {
+        "medium_rbo_difference_original": 0,
+        "medium_rbo_difference_previous_value": 0,
+        "medium_rbo_difference_logit": 0,
+        "medium_rbo_difference_gam": 0,
+        "large_rbo_difference_original": 0,
+        "large_rbo_difference_previous_value": 0,
+        "large_rbo_difference_logit": 0,
+        "large_rbo_difference_gam": 0,
+    }
 
     (
         aggr_avg_overall_agreement_distance_original,
@@ -152,6 +183,24 @@ def config_run(file_path, p, l_ceiling, s_medium, s_large):
                 aggr_avg_small_s_ext_distance_logit += results["ext_distance_logit"]
                 aggr_avg_small_s_ext_distance_gam += results["ext_distance_gam"]
 
+                if 0.01 < results["ext_distance_original"] <= 0.1:
+                    small_s_diffs_dict["medium_rbo_difference_original"] = small_s_diffs_dict["medium_rbo_difference_original"] + 1
+                if 0.01 < results["ext_distance_previous_value"] <= 0.1:
+                    small_s_diffs_dict["medium_rbo_difference_previous_value"] = small_s_diffs_dict["medium_rbo_difference_previous_value"] + 1
+                if 0.01 < results["ext_distance_logit"] <= 0.1:
+                    small_s_diffs_dict["medium_rbo_difference_logit"] = small_s_diffs_dict["medium_rbo_difference_logit"] + 1
+                if 0.01 < results["ext_distance_gam"] <= 0.1:
+                    small_s_diffs_dict["medium_rbo_difference_gam"] = small_s_diffs_dict["medium_rbo_difference_gam"] + 1
+
+                if results["ext_distance_original"] > 0.1:
+                    small_s_diffs_dict["large_rbo_difference_original"] = small_s_diffs_dict["large_rbo_difference_original"] + 1
+                if results["ext_distance_previous_value"] > 0.1:
+                    small_s_diffs_dict["large_rbo_difference_previous_value"] = small_s_diffs_dict["large_rbo_difference_previous_value"] + 1
+                if results["ext_distance_logit"] > 0.1:
+                    small_s_diffs_dict["large_rbo_difference_logit"] = small_s_diffs_dict["large_rbo_difference_logit"] + 1
+                if results["ext_distance_gam"] > 0.1:
+                    small_s_diffs_dict["large_rbo_difference_gam"] = small_s_diffs_dict["large_rbo_difference_gam"] + 1
+
                 if results["avg_agreement_distance_previous_value"] <= min_small_s_agreement_distance_previous_value:
                     best_performing_agreement_small_s_previous_value = results["info"]
                     min_small_s_agreement_distance_previous_value = results["avg_agreement_distance_previous_value"]
@@ -206,6 +255,24 @@ def config_run(file_path, p, l_ceiling, s_medium, s_large):
                 aggr_avg_medium_s_ext_distance_logit += results["ext_distance_logit"]
                 aggr_avg_medium_s_ext_distance_gam += results["ext_distance_gam"]
 
+                if 0.01 < results["ext_distance_original"] <= 0.1:
+                    medium_s_diffs_dict["medium_rbo_difference_original"] = medium_s_diffs_dict["medium_rbo_difference_original"] + 1
+                if 0.01 < results["ext_distance_previous_value"] <= 0.1:
+                    medium_s_diffs_dict["medium_rbo_difference_previous_value"] = medium_s_diffs_dict["medium_rbo_difference_previous_value"] + 1
+                if 0.01 < results["ext_distance_logit"] <= 0.1:
+                    medium_s_diffs_dict["medium_rbo_difference_logit"] = medium_s_diffs_dict["medium_rbo_difference_logit"] + 1
+                if 0.01 < results["ext_distance_gam"] <= 0.1:
+                    medium_s_diffs_dict["medium_rbo_difference_gam"] = medium_s_diffs_dict["medium_rbo_difference_gam"] + 1
+
+                if results["ext_distance_original"] > 0.1:
+                    medium_s_diffs_dict["large_rbo_difference_original"] = medium_s_diffs_dict["large_rbo_difference_original"] + 1
+                if results["ext_distance_previous_value"] > 0.1:
+                    medium_s_diffs_dict["large_rbo_difference_previous_value"] = medium_s_diffs_dict["large_rbo_difference_previous_value"] + 1
+                if results["ext_distance_logit"] > 0.1:
+                    medium_s_diffs_dict["large_rbo_difference_logit"] = medium_s_diffs_dict["large_rbo_difference_logit"] + 1
+                if results["ext_distance_gam"] > 0.1:
+                    medium_s_diffs_dict["large_rbo_difference_gam"] = medium_s_diffs_dict["large_rbo_difference_gam"] + 1
+
                 if results["avg_agreement_distance_previous_value"] <= min_medium_s_agreement_distance_previous_value:
                     best_performing_agreement_medium_s_previous_value = results["info"]
                     min_medium_s_agreement_distance_previous_value = results["avg_agreement_distance_previous_value"]
@@ -259,6 +326,24 @@ def config_run(file_path, p, l_ceiling, s_medium, s_large):
                 aggr_avg_large_s_ext_distance_previous_value += results["ext_distance_previous_value"]
                 aggr_avg_large_s_ext_distance_logit += results["ext_distance_logit"]
                 aggr_avg_large_s_ext_distance_gam += results["ext_distance_gam"]
+
+                if 0.01 < results["ext_distance_original"] <= 0.1:
+                    large_s_diffs_dict["medium_rbo_difference_original"] = large_s_diffs_dict["medium_rbo_difference_original"] + 1
+                if 0.01 < results["ext_distance_previous_value"] <= 0.1:
+                    large_s_diffs_dict["medium_rbo_difference_previous_value"] = large_s_diffs_dict["medium_rbo_difference_previous_value"] + 1
+                if 0.01 < results["ext_distance_logit"] <= 0.1:
+                    large_s_diffs_dict["medium_rbo_difference_logit"] = large_s_diffs_dict["medium_rbo_difference_logit"] + 1
+                if 0.01 < results["ext_distance_gam"] <= 0.1:
+                    large_s_diffs_dict["medium_rbo_difference_gam"] = large_s_diffs_dict["medium_rbo_difference_gam"] + 1
+
+                if results["ext_distance_original"] > 0.1:
+                    large_s_diffs_dict["large_rbo_difference_original"] = large_s_diffs_dict["large_rbo_difference_original"] + 1
+                if results["ext_distance_previous_value"] > 0.1:
+                    large_s_diffs_dict["large_rbo_difference_previous_value"] = large_s_diffs_dict["large_rbo_difference_previous_value"] + 1
+                if results["ext_distance_logit"] > 0.1:
+                    large_s_diffs_dict["large_rbo_difference_logit"] = large_s_diffs_dict["large_rbo_difference_logit"] + 1
+                if results["ext_distance_gam"] > 0.1:
+                    large_s_diffs_dict["large_rbo_difference_gam"] = large_s_diffs_dict["large_rbo_difference_gam"] + 1
 
                 if results["avg_agreement_distance_previous_value"] <= min_large_s_agreement_distance_previous_value:
                     best_performing_agreement_large_s_previous_value = results["info"]
@@ -391,6 +476,9 @@ def config_run(file_path, p, l_ceiling, s_medium, s_large):
             "best_performing_ext_logistic_gam_regression": best_performing_ext_large_s_gam,
         },
     }
+    config_dict[f"small_s_to_{s_medium}"].update(small_s_diffs_dict)
+    config_dict[f"medium_s_from_{s_medium + 1}_to_{s_large}"].update(medium_s_diffs_dict)
+    config_dict[f"large_s_beyond_{s_large + 1}"].update(large_s_diffs_dict)
     return config_dict
 
 
@@ -741,10 +829,10 @@ if __name__ == "__main__":
     random.seed(42)
     p_values = [0.8, 0.9, 0.95]
     data_file = "../data/data_5000pairs_2000length.txt"
-    l_upper_threshold = 100
+    l_upper_threshold = 45
     s_medium_threshold = 15
-    s_large_threshold = 45
-    plotting_depth = 140
+    s_large_threshold = 30
+    plotting_depth = 100
 
     for idx in range(len(p_values)):
         output_dict = config_run(

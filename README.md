@@ -31,10 +31,10 @@ Listed below are all of the tunable hyperparameters in the codebase:
 - `random.seed` as the seed for the pseudorandom-number generation of **_s_** and **_l_** (default of 42)
 - `p_values` as the list of values to be tested for (default of 0.8, 0.9, and 0.95)
 - `data_file` as the path to the file containing the pairs of simulated rankings (default of `../data/data_5000pairs_2000length.txt`)
-- `l_upper_threshold` as the upper bound for the pseudorandom-number generation of **_l_** (default of 100)
+- `l_upper_threshold` as the upper bound for the pseudorandom-number generation of **_l_** (default of 45)
 - `s_medium_threshold` as the value beyond which **_s_** is considered medium, the third category in the JSON files containing the results (default of 15)
-- `s_large_threshold` as the value beyond which **_s_** is considered large, the fourth category in the JSON files containing the results (default of 45)
-- `plotting_depth` as the value at which to truncate the x-axis when plotting the actual and assumed agreements against depth (default of 140)
+- `s_large_threshold` as the value beyond which **_s_** is considered large, the fourth category in the JSON files containing the results (default of 30)
+- `plotting_depth` as the value at which to truncate the x-axis when plotting the actual and assumed agreements against depth (default of 100)
 
 ## References
 - [1] William Webber, Alistair Moffat, and Justin Zobel. A Similarity Measure for Indefinite Rankings. _ACM Trans. Inf. Syst._, 28(4), 11 2010.
