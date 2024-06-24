@@ -138,50 +138,24 @@ def rbo_ext_previous_value(S, L, p, maximal_depth) -> Tuple[float, List[float]]:
         observed_overlaps.append(current_overlap)
         observed_agreements.append((1.0 * current_overlap) / d)
 
-    assumed_agreements = []
-    estimated_membership_probs_second_section = []
-    estimated_membership_probs_third_section = []
+    assumed_agreements = [observed_agreements[len_S - 1]]
     for d in range(len_S + 1, maximal_depth + 1):
         if d <= len_L:
-            if len(estimated_membership_probs_second_section) == 0:
-                estimated_membership_probs_second_section.append(
-                    observed_agreements[len_S - 1]
-                )
-            assumed_overlap = observed_overlaps[d - 1] + sum(
-                estimated_membership_probs_second_section
-            )
-            assumed_agreement = assumed_overlap / d
-            estimated_membership_probs_second_section.append(assumed_agreement)
+            assumed_agreement = (observed_overlaps[d - 1] + sum(assumed_agreements)) / d
         else:
-            if len(estimated_membership_probs_third_section) == 0:
-                if len(estimated_membership_probs_second_section) == 0:
-                    estimated_membership_probs_third_section.append(
-                        observed_agreements[len_S - 1]
-                    )
-                else:
-                    estimated_membership_probs_third_section.append(
-                        estimated_membership_probs_second_section[-1]
-                    )
-                    estimated_membership_probs_second_section.pop()
-            assumed_overlap = (
-                observed_overlaps[-1]
-                + sum(estimated_membership_probs_second_section)
-                + sum(
-                    list(map(lambda x: x * x, estimated_membership_probs_third_section))
-                )
-            )
-            assumed_agreement = assumed_overlap / d
-            estimated_membership_probs_third_section.append(assumed_agreement)
+            assumed_agreement = assumed_agreements[-1]
         assumed_agreements.append(assumed_agreement)
 
     first_term = sum((p ** d) * observed_agreements[d - 1] for d in range(1, len_S + 1))
     second_term = sum(
         (p ** pair[0]) * pair[1]
-        for pair in list(zip(range(len_S + 1, maximal_depth + 1), assumed_agreements))
+        for pair in list(
+            zip(range(len_S + 1, maximal_depth + 1), assumed_agreements[1:])
+        )
     )
 
     result = ((1 - p) / p) * (first_term + second_term)
-    return result, assumed_agreements
+    return result, assumed_agreements[1:]
 
 
 def rbo_ext_logit(S, L, p, maximal_depth) -> Tuple[float, List[float], List[float]]:
@@ -203,25 +177,17 @@ def rbo_ext_logit(S, L, p, maximal_depth) -> Tuple[float, List[float], List[floa
         fitted_agreements_seen_section.append(sigmoid(coefficient * d + intercept))
 
     assumed_agreements = []
-    estimated_membership_probs_second_section = []
-    estimated_membership_probs_third_section = []
+    estimated_membership_probs = []
     for d in range(len_S + 1, maximal_depth + 1):
         current_membership_prob = sigmoid(coefficient * d + intercept)
         if d <= len_L:
-            estimated_membership_probs_second_section.append(current_membership_prob)
-            assumed_overlap = observed_overlaps[d - 1] + sum(
-                estimated_membership_probs_second_section
-            )
+            estimated_membership_probs.append(current_membership_prob)
+            assumed_agreement = (
+                observed_overlaps[d - 1] + sum(estimated_membership_probs)
+            ) / d
         else:
-            estimated_membership_probs_third_section.append(current_membership_prob)
-            assumed_overlap = (
-                observed_overlaps[-1]
-                + sum(estimated_membership_probs_second_section)
-                + sum(
-                    list(map(lambda x: x * x, estimated_membership_probs_third_section))
-                )
-            )
-        assumed_agreements.append(assumed_overlap / d)
+            assumed_agreement = current_membership_prob
+        assumed_agreements.append(assumed_agreement)
 
     first_term = sum((p ** d) * observed_agreements[d - 1] for d in range(1, len_S + 1))
     second_term = sum(
@@ -260,28 +226,20 @@ def rbo_ext_gam(S, L, p, maximal_depth) -> Tuple[float, List[float], List[float]
                 )
 
     assumed_agreements = []
-    estimated_membership_probs_second_section = []
-    estimated_membership_probs_third_section = []
+    estimated_membership_probs = []
     for d in range(len_S + 1, maximal_depth + 1):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             with _HiddenPrints():
                 current_membership_prob = sigmoid(model._linear_predictor(d)[0])
         if d <= len_L:
-            estimated_membership_probs_second_section.append(current_membership_prob)
-            assumed_overlap = observed_overlaps[d - 1] + sum(
-                estimated_membership_probs_second_section
-            )
+            estimated_membership_probs.append(current_membership_prob)
+            assumed_agreement = (
+                observed_overlaps[d - 1] + sum(estimated_membership_probs)
+            ) / d
         else:
-            estimated_membership_probs_third_section.append(current_membership_prob)
-            assumed_overlap = (
-                observed_overlaps[-1]
-                + sum(estimated_membership_probs_second_section)
-                + sum(
-                    list(map(lambda x: x * x, estimated_membership_probs_third_section))
-                )
-            )
-        assumed_agreements.append(assumed_overlap / d)
+            assumed_agreement = current_membership_prob
+        assumed_agreements.append(assumed_agreement)
 
     first_term = sum((p ** d) * observed_agreements[d - 1] for d in range(1, len_S + 1))
     second_term = sum(
